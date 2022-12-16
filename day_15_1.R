@@ -5,9 +5,9 @@ dd <- dd %>%
 dd <- dd %>% 
   mutate(dist = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y))
 dd
-vals <- integer(0)
+invalids <- integer(0)
 
-row <- 11
+row <- 2000000
 i <- 1
 for(i in 1:nrow(dd)) {
   dis <- dd$dist[i]
@@ -15,19 +15,19 @@ for(i in 1:nrow(dd)) {
   if(tol > dis) {
     next
   } else {
-    vals <- union(vals, union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
-    if(14 %in% vals) {
-      break
-    }
+    invalids <- union(invalids, union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
+    # if(14 %in% invalids) {
+    #   break
+    # }
   }
 }
-
-setdiff(0:20, vals)
+dd
+setdiff(0:20, invalids)
 
 bb <- filter(dd, beacon_y == row) %>% 
   pull(beacon_x) %>% 
   unique()
-length(setdiff(vals, bb))
+length(setdiff(invalids, bb))
 
 
 
@@ -41,6 +41,7 @@ is_subset <- function(x, y) {
   return(FALSE)
 }
 row <- 0
+maxval <- 4000000
 for(k in 1:10) {
   vals <- list(NULL)
   j <- 1
@@ -51,6 +52,7 @@ for(k in 1:10) {
       next
     } else {
       vals[[j]] <- sort(union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
+      print(i)
       j <- j + 1
       #vals <- c(vals, union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
     }
@@ -64,27 +66,37 @@ for(k in 1:10) {
       }
     }
   }
-  vals
+  vals[[length(vals) + 1]] <- 4000000:5000000
+  vals[[length(vals) + 1]] <- -1000000:0
   for(i in setdiff(1:length(vals), unique(remove))) {
     for(j in setdiff(1:length(vals), c(unique(remove), i))) {
       a <- length(intersect(vals[[i]], vals[[j]]))
-      if(a > 0 && a < Inf) {
+      if(a > 0 && a < min) {
         min <- a
       }
     }
   }
-  if(min == Inf) {
-    vals <- integer(0)
+  if(min < 2) {
+    invalids <- integer(0)
     for(i in 1:nrow(dd)) {
       dis <- dd$dist[i]
       tol <- abs(dd$sensor_y[i] - row)
       if(tol > dis) {
         next
       } else {
-        vals <- union(vals, union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
+        invalids <- union(invalids, union(dd$sensor_x[i]:(dd$sensor_x[i] - tol + dis), dd$sensor_x[i]:(dd$sensor_x[i] + tol - dis)))
+        # if(14 %in% invalids) {
+        #   break
+        # }
       }
     }
-    if(length(setdiff(0:4000000, vals)) > 0) {
+    invs <- setdiff(0:maxval, invalids)
+    if(length(invs) == 1) {
+      print(row * as.integer(setdiff(0:maxval, invalids)))
+      break
+    }
+    if(length(invs) > 1) {
+      print("ERROR")
       break
     }
     row <- row + 1
@@ -93,4 +105,7 @@ for(k in 1:10) {
     row <- row + change
   }
 }
+remove
+
+
 row
